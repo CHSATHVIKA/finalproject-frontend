@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGRI-ELEVATE - Farmer Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+* { box-sizing: border-box; }
+body { margin:0; font-family: Arial,sans-serif; background:linear-gradient(135deg,#4CAF50,#2E7D32); min-height:100vh; overflow-x:hidden; color:#fff; position:relative; }
+.background-shapes::before,.background-shapes::after{content:"";position:absolute;width:330px;height:330px;background:rgba(255,255,255,0.12);backdrop-filter:blur(12px);border-radius:50%;}
+.background-shapes::before{top:12%;left:8%;}
+.background-shapes::after{top:60%;left:70%;}
+.topbar{width:100%;display:flex;align-items:center;justify-content:space-between;padding:18px 30px;position:relative;z-index:2;}
+.left-stats{display:flex;align-items:center;gap:15px;}
+.branding{font-size:36px;font-weight:bold;margin-right:20px;}
+.stat-card{background:rgba(255,255,255,0.18);padding:18px 25px;border-radius:15px;backdrop-filter:blur(12px);box-shadow:0 6px 18px rgba(0,0,0,0.25);text-align:center;min-width:130px;transition:0.3s;}
+.stat-card:hover{background:rgba(255,255,255,0.28);}
+.stat-card h2{margin:0;font-size:22px;}
+.stat-card p{margin:5px 0 0 0;font-size:14px;}
+.right-actions{display:flex;align-items:center;gap:12px;}
+.add-btn{width:50px;height:50px;background:rgba(255,255,255,0.25);border-radius:50%;font-size:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:0.3s;backdrop-filter:blur(10px);box-shadow:0 6px 20px rgba(0,0,0,0.35);}
+.add-btn:hover{transform:scale(1.1);}
+.profile{width:50px;height:50px;border-radius:50%;background:url('https://cdn-icons-png.flaticon.com/512/3135/3135715.png');background-size:cover;cursor:pointer;border:2px solid rgba(255,255,255,0.7);position:relative;}
+.profile-menu{position:absolute;top:60px;right:0;width:220px;background:rgba(255,255,255,0.25);backdrop-filter:blur(12px);border-radius:15px;padding:10px 0;display:none;box-shadow:0 6px 20px rgba(0,0,0,0.3);z-index:10;}
+.profile-menu div{padding:12px 20px;cursor:pointer;transition:0.2s;}
+.profile-menu div:hover{background:rgba(255,255,255,0.35);}
+.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,240px));gap:22px;padding:25px;justify-content:center;z-index:2;position:relative;}
+.card{background:rgba(255,255,255,0.25);backdrop-filter:blur(10px);border-radius:20px;padding:15px;text-align:center;transition:0.3s;box-shadow:0 6px 18px rgba(0,0,0,0.2);}
+.card:hover{background:rgba(255,255,255,0.35);transform:scale(1.05);}
+.card img{width:100%;height:150px;border-radius:12px;object-fit:cover;}
+.actions button{border:none;padding:8px 14px;border-radius:10px;font-size:20px;cursor:pointer;margin:5px;background:rgba(255,255,255,0.28);}
+.actions button:hover{background:rgba(255,255,255,0.45);}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;justify-content:center;align-items:center;z-index:5;}
+.popup-box{background:rgba(255,255,255,0.3);backdrop-filter:blur(10px);padding:25px;width:90%;max-width:380px;border-radius:20px;display:flex;flex-direction:column;gap:10px;color:black;}
+.popup-box input,.popup-box select{padding:12px;border-radius:12px;border:none;width:100%;}
+.popup-box button{padding:12px;border-radius:12px;border:none;background:#2e7d32;color:white;cursor:pointer;font-size:16px;}
+.close-btn{background:#c62828 !important;}
+.earnings-popup{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;justify-content:center;align-items:center;z-index:20;overflow:auto;}
+.earnings-box{background:rgba(255,255,255,0.3);backdrop-filter:blur(12px);padding:25px;width:95%;max-width:700px;border-radius:20px;display:flex;flex-direction:column;gap:15px;color:black;}
+.earnings-box h2{text-align:center;}
+.earnings-total{display:flex;justify-content:space-around;gap:20px;font-size:18px;}
+.chart-container{width:100%;height:250px;}
+.transactions{background:rgba(255,255,255,0.2);border-radius:12px;padding:10px;max-height:150px;overflow-y:auto;}
+.transactions p{margin:5px 0;}
+</style>
+</head>
+<body>
+
+<div class="background-shapes"></div>
+
+<div class="topbar">
+    <div class="left-stats">
+        <div class="branding">AGRI-ELEVATE</div>
+        <div class="stat-card"><h2 id="totalProducts">0</h2><p>Total Products</p></div>
+        <div class="stat-card"><h2 id="totalQty">0</h2><p>Total Quantity</p></div>
+        <div class="stat-card"><h2 id="inventoryVal">₹ 0</h2><p>Inventory Value</p></div>
+    </div>
+    <div class="right-actions">
+        <div class="stat-card earnings" onclick="showEarnings()"><h2 id="earnings">Earnings: ₹ 0</h2><p>Click to view details</p></div>
+        <div class="add-btn" onclick="openForm()">+</div>
+        <div class="profile" onclick="toggleProfileMenu()">
+            <div class="profile-menu" id="profileMenu">
+                <div>My Details</div>
+                <div>Security</div>
+                <div>Privacy</div>
+                <div>Help & Support</div>
+                <div onclick="logout()">Logout</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="products" id="products"></div>
+
+<div class="popup" id="popup">
+    <div class="popup-box">
+        <h2 id="formTitle">Add Product</h2>
+        <input type="text" id="pname" placeholder="Product Name">
+        <input type="number" id="pprice" placeholder="Price">
+        <input type="number" id="pqty" placeholder="Quantity">
+        <!-- NEW: CATEGORY SELECT -->
+        <select id="pcat">
+            <option value="">Select Category</option>
+            <option value="Fruits">Fruits</option>
+            <option value="Vegetables">Vegetables</option>
+            <option value="Grains">Grains</option>
+            <option value="Others">Others</option>
+        </select>
+        <input type="file" id="pimg">
+        <button onclick="saveProduct()">Save</button>
+        <button class="close-btn" onclick="closeForm()">Cancel</button>
+    </div>
+</div>
+
+<div class="earnings-popup" id="earningsPopup">
+    <div class="earnings-box">
+        <h2>Earnings Dashboard</h2>
+        <div class="earnings-total">
+            <div>This Month: ₹<span id="thisMonth">0</span></div>
+            <div>Lifetime: ₹<span id="lifetime">0</span></div>
+        </div>
+        <div class="chart-container"><canvas id="dailyChart"></canvas></div>
+        <div class="chart-container"><canvas id="monthlyChart"></canvas></div>
+        <h3>Recent Transactions</h3>
+        <div class="transactions" id="transactions"></div>
+        <button class="close-btn" onclick="closeEarnings()">Close</button>
+    </div>
+</div>
+
+<script>
+let products=[];
+let editIndex=-1;
+let transactionsData=[];
+
+/* PROFILE MENU */
+function toggleProfileMenu(){let menu=document.getElementById("profileMenu"); menu.style.display=menu.style.display==="block"?"none":"block";}
+function logout(){window.location.href="roles.html";}
+
+/* PRODUCT FUNCTIONS */
+function openForm(){document.getElementById("popup").style.display="flex";document.getElementById("formTitle").innerText="Add Product"; editIndex=-1; resetForm();}
+function closeForm(){document.getElementById("popup").style.display="none";}
+function resetForm(){pname.value=""; pprice.value=""; pqty.value=""; pimg.value=""; pcat.value="";}
+
+function saveProduct(){
+    let name=pname.value, price=Number(pprice.value), qty=Number(pqty.value), cat=pcat.value;
+    let imgFile=pimg.files[0];
+    if(!name||!price||!qty||!cat){alert("Please fill all fields"); return;}
+
+    function addProduct(imgData){
+        if(editIndex===-1){
+            products.push({name, price, qty, img:imgData, category:cat});
+            transactionsData.push({name, amount:price*qty, date:new Date()});
+        } else {
+            let p=products[editIndex]; p.name=name; p.price=price; p.qty=qty; p.img=imgData; p.category=cat;
+            transactionsData.push({name, amount:price*qty, date:new Date()});
+        }
+        localStorage.setItem("farmerProducts", JSON.stringify(products));
+        renderProducts(); updateStats(); resetForm(); closeForm();
+    }
+
+    if(imgFile){
+        let reader=new FileReader();
+        reader.onload=function(e){ addProduct(e.target.result); }
+        reader.readAsDataURL(imgFile);
+    } else if(editIndex!==-1){ addProduct(products[editIndex].img); }
+    else{ alert("Please choose an image"); }
+}
+
+function renderProducts(){
+    let container=document.getElementById("products");
+    container.innerHTML="";
+    products.forEach((p,i)=>{
+        container.innerHTML+=`<div class="card">
+            <img src="${p.img}">
+            <h3>${p.name}</h3>
+            <p>₹ ${p.price}</p>
+            <p>Quantity: ${p.qty}</p>
+            <p>Category: ${p.category}</p>
+            <div class="actions">
+                <button onclick="editProduct(${i})">✏</button>
+                <button onclick="deleteProduct(${i})">🗑</button>
+            </div>
+        </div>`;
+    });
+}
+
+function editProduct(i){
+    editIndex=i;
+    let p=products[i];
+    pname.value=p.name; pprice.value=p.price; pqty.value=p.qty; pimg.value=""; pcat.value=p.category;
+    formTitle.innerText="Edit Product"; popup.style.display="flex";
+}
+
+function deleteProduct(i){ products.splice(i,1); renderProducts(); updateStats(); }
+
+function updateStats(){
+    let totalProducts=products.length;
+    let totalQty=products.reduce((sum,p)=>sum+p.qty,0);
+    let inventoryVal=products.reduce((sum,p)=>sum+p.price*p.qty,0);
+    document.getElementById("totalProducts").innerText=totalProducts;
+    document.getElementById("totalQty").innerText=totalQty;
+    document.getElementById("inventoryVal").innerText="₹ "+inventoryVal;
+    document.getElementById("earnings").innerText="Earnings: ₹ "+inventoryVal;
+}
+
+/* EARNINGS POPUP */
+function showEarnings(){
+    document.getElementById('earningsPopup').style.display='flex';
+    let thisMonth=transactionsData.filter(t=>{let now=new Date(); return t.date.getMonth()===now.getMonth() && t.date.getFullYear()===now.getFullYear();}).reduce((sum,t)=>sum+t.amount,0);
+    let lifetime=transactionsData.reduce((sum,t)=>sum+t.amount,0);
+    document.getElementById('thisMonth').innerText=thisMonth;
+    document.getElementById('lifetime').innerText=lifetime;
+
+    let transDiv=document.getElementById('transactions'); transDiv.innerHTML="";
+    transactionsData.slice(-5).reverse().forEach(t=>{ let d=t.date; transDiv.innerHTML+=`<p>${d.toLocaleDateString()} - ${t.name} - ₹${t.amount}</p>`; });
+
+    let dailyLabels=[...Array(30).keys()].map(i=>i+1);
+    let dailyData=dailyLabels.map(d=>transactionsData.filter(t=>t.date.getDate()===d).reduce((sum,t)=>sum+t.amount,0));
+    let ctxDaily=document.getElementById('dailyChart').getContext('2d');
+    if(window.dailyChart) window.dailyChart.destroy();
+    window.dailyChart=new Chart(ctxDaily,{type:'bar',data:{labels:dailyLabels,datasets:[{label:'Daily Sales',data:dailyData,backgroundColor:'#1B5E20'}]}});
+
+    let monthlyLabels=Array.from({length:12},(_,i)=>i+1);
+    let monthlyData=monthlyLabels.map(m=>transactionsData.filter(t=>t.date.getMonth()===m).reduce((sum,t)=>sum+t.amount,0));
+    let ctxMonth=document.getElementById('monthlyChart').getContext('2d');
+    if(window.monthlyChart) window.monthlyChart.destroy();
+    window.monthlyChart=new Chart(ctxMonth,{type:'line',data:{labels:monthlyLabels,datasets:[{label:'Monthly Sales',data:monthlyData,borderColor:'#1B5E20',fill:false}]}});
+
+}
+
+function closeEarnings(){ document.getElementById('earningsPopup').style.display='none'; }
+
+window.onload=function(){
+    products=JSON.parse(localStorage.getItem("farmerProducts")) || [];
+    renderProducts(); updateStats();
+}
+</script>
+
+</body>
+</html>

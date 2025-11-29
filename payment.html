@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGRI-ELEVATE - Payment CAPTCHA</title>
+<style>
+body { 
+  margin:0; font-family: Arial, sans-serif; 
+  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+  min-height:100vh; display:flex; justify-content:center; align-items:center;
+}
+.payment-container {
+  background: rgba(255,255,255,0.2); backdrop-filter: blur(15px);
+  border-radius:25px; padding:30px; width:90%; max-width:450px;
+  box-shadow:0 8px 25px rgba(0,0,0,0.35); color:white;
+}
+h2{text-align:center; margin-bottom:15px;}
+.cart-total {
+  background: rgba(255,255,255,0.1); padding:12px 20px; border-radius:15px;
+  margin-bottom:20px; text-align:center; font-size:18px;
+}
+.payment-method { display:flex; align-items:center; gap:15px; padding:12px 20px;
+  border-radius:15px; margin-bottom:15px; cursor:pointer; transition:0.3s; background: rgba(255,255,255,0.1);
+}
+.payment-method:hover { background: rgba(255,255,255,0.25); }
+.payment-method input { margin-right:15px; transform:scale(1.3); }
+.proceed-btn {
+  width:100%; padding:14px; border:none; border-radius:15px;
+  background: rgba(255,255,255,0.25); color:white; font-size:18px;
+  cursor:pointer; transition:0.3s;
+}
+.proceed-btn:hover { background: rgba(255,255,255,0.45); transform:scale(1.05); }
+
+.separator { border-bottom:1px solid rgba(255,255,255,0.3); margin:15px 0; }
+
+.captcha-box { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.captcha-code {
+  background: rgba(255,255,255,0.1); padding:10px 15px; border-radius:12px;
+  font-weight:bold; font-size:24px; user-select:none; letter-spacing:3px;
+  font-family: monospace; display:flex; gap:5px;
+}
+.captcha-code span {
+  display:inline-block; transform:rotate(calc(-20deg + 40deg*var(--r)));
+  color: white; font-size: 24px;
+}
+.captcha-input input { padding:10px 12px; border-radius:12px; border:none; width:140px; text-align:center; }
+.reload-btn { cursor:pointer; font-size:22px; margin-left:10px; }
+</style>
+</head>
+<body>
+
+<div class="payment-container">
+  <h2>Checkout</h2>
+  <div class="cart-total" id="cartTotal">Total Amount: ₹ 0</div>
+
+  <label class="payment-method"><input type="radio" name="payment" value="cod" checked> 💵 Cash on Delivery</label>
+  <label class="payment-method"><input type="radio" name="payment" value="upi"> 📲 UPI</label>
+  <label class="payment-method"><input type="radio" name="payment" value="debit"> 💳 Debit Card</label>
+  <label class="payment-method"><input type="radio" name="payment" value="credit"> 🏦 Credit Card</label>
+
+  <div class="separator"></div>
+
+  <div class="captcha-box">
+    <div class="captcha-code" id="captchaCode"></div>
+    <span class="reload-btn" onclick="reloadCaptcha()">🔄</span>
+    <div class="captcha-input">
+      <input type="text" id="captchaInput" placeholder="Enter CAPTCHA">
+    </div>
+  </div>
+
+  <button class="proceed-btn" onclick="processPayment()">Proceed to Payment</button>
+</div>
+
+<script>
+// Generate 4 random CAPTCHAs
+const captchaSet = [];
+function randomChar(){ return "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".charAt(Math.floor(Math.random()*32)); }
+for(let i=0;i<4;i++){
+  let code=""; for(let j=0;j<5;j++) code += randomChar(); captchaSet.push(code);
+}
+
+let currentCaptcha = "";
+function renderCaptcha(code){
+  let container = document.getElementById("captchaCode");
+  container.innerHTML="";
+  for(let c of code){
+    let span = document.createElement("span");
+    span.style.setProperty("--r", Math.random().toFixed(2)); // random rotation
+    span.innerText = c;
+    container.appendChild(span);
+  }
+}
+
+function reloadCaptcha(){
+  currentCaptcha = captchaSet[Math.floor(Math.random()*captchaSet.length)];
+  renderCaptcha(currentCaptcha);
+}
+
+// Initial captcha
+reloadCaptcha();
+
+function processPayment(){
+  let userInput = document.getElementById("captchaInput").value.toUpperCase();
+  if(userInput !== currentCaptcha){
+    alert("Incorrect CAPTCHA! Try again.");
+    reloadCaptcha();
+    document.getElementById("captchaInput").value="";
+    return;
+  }
+  let method = document.querySelector('input[name="payment"]:checked').value;
+  alert("Payment method: " + method.toUpperCase() + " | Order processed successfully!");
+}
+
+// Optional: cart total from buyerCart
+let products = JSON.parse(localStorage.getItem("buyerCart") || "[]");
+let total = products.reduce((sum,p)=>sum + p.price*p.qty,0);
+document.getElementById("cartTotal").innerText = "Total Amount: ₹ " + total;
+
+</script>
+</body>
+</html>
+

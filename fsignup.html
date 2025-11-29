@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farmer Signup</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+
+    body {
+        background: linear-gradient(135deg, #4CAF50, #2E7D32);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .shape {
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 50%;
+        filter: blur(15px);
+    }
+    .shape1 { top: 10%; left: 5%; }
+    .shape2 { top: 60%; right: 10%; }
+    .shape3 { bottom: 20%; left: 30%; }
+
+    .container {
+        width: 100%;
+        max-width: 400px;
+        padding: 25px;
+        background: rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(15px);
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+        position: relative;
+        z-index: 1;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 25px;
+        color: #fff;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        font-size: 28px;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    input {
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        outline: none;
+        width: 100%;
+        font-size: 15px;
+    }
+
+    button {
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        background: #1B5E20;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    button:hover {
+        background: #145A18;
+    }
+
+    p.text-center {
+        text-align: center;
+        margin-top: 12px;
+        font-size: 14px;
+        color: #fff;
+    }
+
+    a {
+        color: #A5D6A7;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    a:hover { text-decoration: underline; }
+
+    .error {
+        color: #ffeb3b;
+        font-size: 13px;
+        margin-top: -8px;
+    }
+
+</style>
+</head>
+<body>
+
+<div class="shape shape1"></div>
+<div class="shape shape2"></div>
+<div class="shape shape3"></div>
+
+<div class="container">
+    <h2>Farmer Signup</h2>
+    <form id="signupForm">
+        <input type="text" name="fname" placeholder="First Name" required>
+        <input type="text" name="lname" placeholder="Last Name" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" id="password" placeholder="Password" required>
+        <span class="error" id="passError"></span>
+        <button type="submit">Signup</button>
+    </form>
+    <p class="text-center">Already have an account? <a href="flogin.html">Login</a></p>
+</div>
+
+<script>
+const form = document.getElementById('signupForm');
+const password = document.getElementById('password');
+const passError = document.getElementById('passError');
+
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const passVal = password.value;
+    const regex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
+
+    if (!regex.test(passVal)) {
+        passError.textContent = "Password must be 8+ chars, include uppercase, lowercase & number";
+        password.focus();
+    } else {
+        passError.textContent = "";
+        // Redirect to farmer dashboard
+        window.location.href = "farmer.html";
+    }
+});
+</script>
+
+</body>
+</html>

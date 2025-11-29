@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGRI-ELEVATE - Buyer Dashboard</title>
+<style>
+* { box-sizing: border-box; margin:0; padding:0; font-family: Arial, sans-serif; }
+body { background: linear-gradient(135deg, #4CAF50, #2E7D32); color:#fff; min-height:100vh; overflow-x:hidden; position:relative; }
+
+.background-shapes::before,
+.background-shapes::after {
+    content:""; position:absolute; width:330px; height:330px; background: rgba(255,255,255,0.12); backdrop-filter: blur(12px); border-radius:50%;
+}
+.background-shapes::before { top:12%; left:8%; }
+.background-shapes::after { top:60%; left:70%; }
+
+/* TOP BAR */
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:15px 25px; position:relative; z-index:5; }
+.branding { font-size:28px; font-weight:bold; text-shadow:0 2px 4px rgba(0,0,0,0.4); }
+
+/* SEARCH & FILTER */
+.toolbar { display:flex; gap:10px; flex:1; margin-left:20px; }
+.toolbar input, .toolbar select { padding:10px 12px; border-radius:12px; border:none; font-size:14px; }
+.toolbar input { flex:1; }
+
+/* PRODUCT GRID */
+.products { display:grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap:20px; padding:20px; }
+.card { background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); border-radius:20px; padding:15px; text-align:center; transition:0.3s; box-shadow:0 6px 18px rgba(0,0,0,0.25); }
+.card:hover { transform: scale(1.05); background: rgba(255,255,255,0.35); }
+.card img { width:100%; height:150px; border-radius:12px; object-fit:cover; }
+.card h3 { margin:10px 0 5px 0; }
+.card p { margin:5px 0; }
+.card input[type=number] { width:70px; padding:5px; border-radius:8px; border:none; text-align:center; margin-bottom:5px; }
+.card button { padding:8px 12px; border:none; border-radius:10px; cursor:pointer; margin:5px; transition:0.3s; background: rgba(255,255,255,0.28); }
+.card button:hover { background: rgba(255,255,255,0.45); transform:scale(1.05); }
+
+/* CART POPUP */
+.cart-popup { position:fixed; inset:0; background: rgba(0,0,0,0.65); display:none; justify-content:center; align-items:center; z-index:10; }
+.cart-box { background: rgba(255,255,255,0.3); backdrop-filter:blur(12px); padding:20px; width:90%; max-width:500px; border-radius:20px; color:black; display:flex; flex-direction:column; gap:10px; max-height:80vh; overflow-y:auto; }
+.cart-box h2 { text-align:center; }
+.cart-items { display:flex; flex-direction:column; gap:8px; }
+.cart-row { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid rgba(0,0,0,0.1); }
+.cart-total { display:flex; justify-content:space-between; font-weight:bold; font-size:16px; margin-top:10px; }
+.proceed-btn { background: rgba(255,255,255,0.2); color:#fff; padding:12px; border:none; border-radius:12px; cursor:pointer; font-size:16px; transition:0.3s; }
+.proceed-btn:hover { background: rgba(255,255,255,0.35); }
+
+.top-right { display:flex; align-items:center; gap:15px; position:relative; }
+.icon-btn { width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; background: rgba(255,255,255,0.25); transition:0.3s; }
+.icon-btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.35); }
+#cartCount { position:absolute; top:-5px; right:-5px; background:#d32f2f; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; color:white; }
+
+.profile-menu { position:absolute; top:60px; right:0; width:180px; background: rgba(255,255,255,0.25); backdrop-filter: blur(12px); border-radius:12px; display:none; flex-direction:column; overflow:hidden; box-shadow:0 6px 20px rgba(0,0,0,0.3); }
+.profile-menu div { padding:12px 15px; cursor:pointer; transition:0.2s; }
+.profile-menu div:hover { background: rgba(255,255,255,0.35); transform: scale(1.05); }
+
+</style>
+</head>
+<body>
+<div class="background-shapes"></div>
+
+<div class="topbar">
+    <div class="branding">AGRI-ELEVATE</div>
+    <div class="toolbar">
+        <input type="text" id="search" placeholder="Search products...">
+        <select id="category">
+            <option value="all">All Categories</option>
+            <option value="Fruits">Fruits</option>
+            <option value="Vegetables">Vegetables</option>
+            <option value="Grains">Grains</option>
+            <option value="Others">Others</option>
+        </select>
+        <select id="sort">
+            <option value="none">Sort by</option>
+            <option value="lth">Price: Low → High</option>
+            <option value="htl">Price: High → Low</option>
+        </select>
+    </div>
+    <div class="top-right">
+        <div class="icon-btn" onclick="toggleCart()">
+            🛒 <div id="cartCount">0</div>
+        </div>
+        <div class="icon-btn profile" onclick="toggleProfileMenu()">
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" style="width:100%;border-radius:50%;">
+            <div class="profile-menu" id="profileMenu">
+                <div>My Details</div>
+                <div>Orders</div>
+                <div>Help & Support</div>
+                <div onclick="logout()">Logout</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="products" id="products"></div>
+
+<div class="cart-popup" id="cartPopup">
+    <div class="cart-box">
+        <h2>Cart</h2>
+        <div class="cart-items" id="cartItems"></div>
+        <div class="cart-total"><span>Total:</span><span id="cartTotal">₹ 0</span></div>
+        <button class="proceed-btn"><a href="payment.html" style="text-decoration: none;">Proceed to Payment</a></button>
+        <button class="close-cart" onclick="toggleCart()">Close</button>
+    </div>
+</div>
+
+<script>
+let allProducts = JSON.parse(localStorage.getItem("farmerProducts") || "[]");
+let cart = [];
+
+// FILTER & SORT
+const searchInput = document.getElementById("search");
+const categorySelect = document.getElementById("category");
+const sortSelect = document.getElementById("sort");
+
+function renderProducts(){
+    let container = document.getElementById("products");
+    let filtered = allProducts.filter(p => 
+        p.name.toLowerCase().includes(searchInput.value.toLowerCase()) &&
+        (categorySelect.value === "all" || p.category === categorySelect.value)
+    );
+
+    if(sortSelect.value==="lth") filtered.sort((a,b)=>a.price-b.price);
+    if(sortSelect.value==="htl") filtered.sort((a,b)=>b.price-a.price);
+
+    container.innerHTML="";
+    filtered.forEach((p,i)=>{
+        container.innerHTML += `<div class="card">
+            <img src="${p.img}">
+            <h3>${p.name}</h3>
+            <p>₹ ${p.price}</p>
+            <p>Available: ${p.qty}</p>
+            <input type="number" id="qty${i}" placeholder="Qty" min="1" max="${p.qty}">
+            <button onclick="addToCart(${i})">Add to Cart 🛒</button>
+        </div>`;
+    });
+}
+renderProducts();
+searchInput.addEventListener("input", renderProducts);
+categorySelect.addEventListener("change", renderProducts);
+sortSelect.addEventListener("change", renderProducts);
+
+// CART
+function addToCart(i){
+    let qtyInput = document.getElementById("qty"+i);
+    let qty = Number(qtyInput.value);
+    let filtered = allProducts.filter(p => 
+        p.name.toLowerCase().includes(searchInput.value.toLowerCase()) &&
+        (categorySelect.value === "all" || p.category === categorySelect.value)
+    );
+    let product = filtered[i];
+    if(!qty || qty<1 || qty>product.qty){ alert("Invalid quantity"); return; }
+    let existing = cart.find(item=>item.name===product.name);
+    if(existing){ existing.qty += qty; } else { cart.push({...product, qty}); }
+    updateCartCount();
+    qtyInput.value="";
+}
+
+function toggleCart(){
+    let popup = document.getElementById("cartPopup");
+    popup.style.display = popup.style.display==="flex"?"none":"flex";
+    if(popup.style.display==="flex") renderCart();
+}
+
+function renderCart(){
+    let container = document.getElementById("cartItems");
+    container.innerHTML="";
+    let total = 0;
+    cart.forEach(item=>{
+        let subTotal = item.qty*item.price;
+        total += subTotal;
+        container.innerHTML += `<div class="cart-row">
+            <span>${item.name} x ${item.qty}</span>
+            <span>₹ ${subTotal}</span>
+        </div>`;
+    });
+    document.getElementById("cartTotal").innerText = "₹ "+total;
+}
+
+function updateCartCount(){
+    document.getElementById("cartCount").innerText = cart.reduce((sum,item)=>sum+item.qty,0);
+}
+
+// PROFILE MENU
+function toggleProfileMenu(){
+    let menu = document.getElementById("profileMenu");
+    menu.style.display = menu.style.display==="flex"?"none":"flex";
+}
+function logout(){ window.location.href="roles.html"; }
+</script>
+</body>
+</html>
